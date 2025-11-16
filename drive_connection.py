@@ -9,7 +9,9 @@ from googleapiclient.errors import HttpError
 # If modifying these scopes, delete the file token.json.
 SCOPES = ["https://www.googleapis.com/auth/drive"]
 
-
+# =========================================================
+# Faz a conexão com o Google Drive para acessar os datasets
+# =========================================================
 def auth_drive():
   creds = None 
   if os.path.exists("token.json"):
@@ -35,23 +37,6 @@ def auth_drive():
   except HttpError as error:
     print(f"An error occurred: {error}")
 
-def list_dataset(service):
-    FOLDER_ID = "1kl2-7jD_dJSIdkJqSKv2kcpfttG7sJoP"
-    query = f"'{FOLDER_ID}' in parents"
-
-    results = service.files().list(
-       q=query, 
-       pageSize=10, 
-       fields="files(id, name)").execute()
-    
-    items = results.get("files", [])
-    if not items:
-        print("No files found.")
-        return
-    print("Files:")
-    for item in items:
-        print(f"{item['name']} ({item['id']})")
 
 if __name__ == "__main__":
-    service = auth_drive()
-    list_dataset(service) 
+  service = auth_drive() 
