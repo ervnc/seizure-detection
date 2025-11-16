@@ -45,7 +45,7 @@ def find_by_name_in_folder(service, folder_id: str, name: str) -> Optional[Dict]
 # Faz o download de um arquivo do Google Drive e retorna seus bytes
 # =================================================================
 def stream_file_bytes(service, file_id: str) -> bytes:
-  req = service.files().getMedia(fileId=file_id)
+  req = service.files().get_media(fileId=file_id)
   buf = io.BytesIO()
   down = MediaIoBaseDownload(buf, req)
   done = False
@@ -62,4 +62,4 @@ def read_text_file(service, file_id: str, encoding="utf-8") -> str:
   try:
     return data.decode(encoding)
   except Exception:
-    return data.decore("latin-1", errors="ignore")
+    return data.decode("latin-1", errors="ignore")
