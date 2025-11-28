@@ -1,6 +1,7 @@
 from drive_connection import auth_drive
 from helpers.chbmit_helpers import list_patient_edfs, get_patient_folder_id, get_intervals_from_drive
 from readers.chbmit_reader import build_windows_and_labels
+from processors.wavelet import extract_features_wavelet
 
 FOLDER_ID = "1nJm3E6XnYVVFz2itBBdC-qtSab6GZmLO" # ID da pasta '1.0.0' no Google Drive
 PATIENT = "chb01"
@@ -30,4 +31,5 @@ if __name__ == "__main__":
 
     print(f"sfreq={sf} Hz | windows={windows.shape[0]} | positivos={int(y.sum())}")
 
-    
+    X = extract_features_wavelet(raw, windows)
+    print("Input Shape para a Rede:", X.shape)

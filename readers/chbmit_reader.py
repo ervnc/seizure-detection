@@ -1,7 +1,7 @@
 import mne
 import os
 import tempfile
-from typing import Tuple
+from typing import Tuple, Optional
 import numpy as np
 
 from utils.drive_utils import stream_file_bytes
@@ -13,7 +13,7 @@ from helpers.chbmit_helpers import get_patient_folder_id, list_patient_edfs, mak
 # ==============================================================================
 def read_edf_from_drive(service, edf_file_id: str,
                         l_freq: float = 0.5, h_freq: float = 45.0,
-                        resample_hz: float | None = 256.0) -> mne.io.BaseRaw:
+                        resample_hz: Optional[float] = 256.0) -> mne.io.BaseRaw:
     data_bytes = stream_file_bytes(service, edf_file_id)
 
     # cria arquivo temporário
