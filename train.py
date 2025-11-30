@@ -4,7 +4,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report, confusion_matrix
 from sklearn.utils.class_weight import compute_class_weight
 from sklearn.preprocessing import StandardScaler 
-from sklearn.preprocessing import RobustScaler # Em vez de StandardScaler
+from sklearn.preprocessing import RobustScaler
 
 from drive_connection import auth_drive
 from helpers.chbmit_helpers import get_patient_folder_id, list_patient_edfs
@@ -44,48 +44,64 @@ def plot_training_history(history):
 
 # --- CONFIGURAÇÕES ---
 FOLDER_ID = "1nJm3E6XnYVVFz2itBBdC-qtSab6GZmLO"
-PATIENT = "chb01"
-EPOCHS = 50        # Aumentei para dar tempo de convergir com LR baixo
+PATIENTS = [f"chb{i:02d}" for i in range(1, 25)]
+EPOCHS = 50
 BATCH_SIZE = 16    
 
 def main():
-    print("--- INICIANDO TREINAMENTO ROBUSTO ---")
+    print("--- INICIANDO TREINAMENTO ROBUSTO COM MÚLTIPLOS PACIENTES ---")
     service = auth_drive()
-    patient_id = get_patient_folder_id(service, FOLDER_ID, PATIENT)
     
-    edfs = list_patient_edfs(service, patient_id)
-    
-    # Pegamos todos que têm crise
-    files_with_seizure = [f for f in edfs if f['has_seizures_file']]
-    # Pegamos todos que NÃO têm crise
-    files_normal = [f for f in edfs if not f['has_seizures_file']]
-    
-    # ESTRATÉGIA: Usar todos com crise + uma quantidade igual ou maior de arquivos normais
-    # Isso garante que a rede veja "dias normais"
-    import random
-    # Exemplo: pega 5 arquivos puramente normais aleatórios para dar contexto
-    files_normal_sample = files_normal[:5] if len(files_normal) > 5 else files_normal
-    
-    training_files = files_with_seizure + files_normal_sample
-    print(f">> Selecionados {len(training_files)} arquivos ({len(files_with_seizure)} com crise, {len(files_normal_sample)} normais puros)")
-
     all_X = []
     all_y = []
-
-    print(f">> Processando {len(training_files)} arquivos...")
-    for edf_row in training_files:
+    
+    for patient in PATIENTS:
+        print(f"\n>> Processando paciente: {patient}")
         try:
-            raw, windows, y = build_windows_and_labels(
-                service, FOLDER_ID, PATIENT, edf_row["name"],
-                window_s=2.0, step_s=0.5
-            )
-            if len(windows) > 0:
-                X = extract_features_wavelet(raw, windows)
-                all_X.append(X)
-                all_y.append(y)
+            patient_id = get_patient_folder_id(service, FOLDER_ID, patient)
+            
+            if patient_id is None:
+                print(f"  [Skip] Paciente {patient} não encontrado no Drive")
+                continue
+            
+            edfs = list_patient_edfs(service, patient_id)
+            
+            if len(edfs) == 0:
+                print(f"  [Skip] Paciente {patient} não possui arquivos EDF")
+                continue
+            
+            files_with_seizure = [f for f in edfs if f['has_seizures_file']]
+            files_normal = [f for f in edfs if not f['has_seizures_file']]
+            
+            files_normal_sample = files_normal[:5] if len(files_normal) > 5 else files_normal
+            
+            training_files = files_with_seizure + files_normal_sample
+            print(f"  >> Selecionados {len(training_files)} arquivos ({len(files_with_seizure)} com crise, {len(files_normal_sample)} normais puros)")
+
+            print(f"  >> Processando {len(training_files)} arquivos do paciente {patient}...")
+            for edf_row in training_files:
+                try:
+                    raw, windows, y = build_windows_and_labels(
+                        service, FOLDER_ID, patient, edf_row["name"],
+                        window_s=2.0, step_s=0.5
+                    )
+                    if len(windows) > 0:
+                        X = extract_features_wavelet(raw, windows)
+                        all_X.append(X)
+                        all_y.append(y)
+                        print(f"    [OK] {edf_row['name']}: {len(windows)} janelas")
+                except Exception as e:
+                    print(f"    [Skip] {edf_row['name']}: {e}")
+                    continue
         except Exception as e:
-            print(f"  [Skip] {edf_row['name']}: {e}")
+            print(f"  [Erro] Erro ao processar paciente {patient}: {e}")
             continue
+    
+    if len(all_X) == 0:
+        print("\n[ERRO] Nenhum dado foi coletado. Verifique os pacientes e arquivos disponíveis.")
+        return
+    
+    print(f"\n>> Total de arquivos processados: {len(all_X)}")
 
     X_raw = np.concatenate(all_X, axis=0)
     y_raw = np.concatenate(all_y, axis=0)
@@ -100,7 +116,6 @@ def main():
     RATIO = 3 
     n_normal_keep = int(n_seizure * RATIO)
     
-    # Undersampling dos normais
     if len(idx_normal) > n_samples:
         np.random.shuffle(idx_normal)
         selected_normals = idx_normal[:n_normal_keep] 
@@ -122,8 +137,6 @@ def main():
     )
 
     # --- NORMALIZAÇÃO (CRÍTICO) ---
-    # StandardScaler funciona em 2D, precisamos achatar, escalar e voltar pra 3D
-    #scaler = StandardScaler()
     scaler = RobustScaler()
     
     N, T, F = X_train.shape
@@ -145,7 +158,6 @@ def main():
 
     model = build_cnn_lstm_model((T, F))
     
-    # Otimizador com Learning Rate menor para evitar pular o mínimo
     optimizer = tf.keras.optimizers.Adam(learning_rate=0.0001)
     
     model.compile(
@@ -154,13 +166,12 @@ def main():
         metrics=['accuracy']
     )
 
-    # Paciência maior
     early_stop = tf.keras.callbacks.EarlyStopping(
         monitor='val_loss', patience=10, restore_best_weights=True
     )
 
     history = model.fit(
-        X_train_scaled, y_train, # Usando dados SCALED
+        X_train_scaled, y_train,
         epochs=EPOCHS,
         batch_size=BATCH_SIZE,
         validation_data=(X_test_scaled, y_test),
