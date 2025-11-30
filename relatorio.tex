@@ -29,52 +29,52 @@
 \maketitle
 
 \begin{abstract}
-Este trabalho apresenta um sistema de detecção automática de crises epilépticas em sinais de eletroencefalograma (EEG) utilizando uma arquitetura híbrida de Deep Learning combinando redes neurais convolucionais (CNN) e memórias de longo prazo (LSTM), aliada à extração de características através da Transformada Wavelet Discreta. O sistema foi desenvolvido utilizando o dataset CHB-MIT Scalp EEG Database, processando dados de múltiplos pacientes. A metodologia proposta alcançou resultados promissores, com acurácia de aproximadamente 99\%, precisão de 0.98, recall de 0.97 e F1-score de 0.97 no conjunto de teste, demonstrando a eficácia da combinação de técnicas de processamento de sinais com aprendizado profundo para este problema crítico de saúde.
+Desenvolvemos um sistema para detecção automática de crises epilépticas em sinais de eletroencefalograma (EEG) usando uma arquitetura híbrida que combina redes neurais convolucionais (CNN) e memórias de longo prazo (LSTM). A extração de características foi feita através da Transformada Wavelet Discreta. Trabalhamos com o dataset CHB-MIT Scalp EEG Database, processando dados de vários pacientes. Os resultados obtidos foram bastante promissores: acurácia de cerca de 99\%, precisão de 0.98, recall de 0.97 e F1-score de 0.97 no conjunto de teste. Isso mostra que a combinação de técnicas de processamento de sinais com deep learning funciona bem para este problema importante na área de saúde.
 \end{abstract}
 
 \section{Introdução}
 
-A epilepsia é uma das doenças neurológicas mais comuns no mundo, afetando aproximadamente 50 milhões de pessoas globalmente, segundo dados da Organização Mundial da Saúde (OMS). Caracteriza-se por crises epilépticas recorrentes, que são episódios de atividade elétrica anormal no cérebro. O diagnóstico e monitoramento da epilepsia tradicionalmente dependem da análise visual de longos registros de eletroencefalograma (EEG) por neurologistas especializados, um processo extremamente trabalhoso e sujeito a subjetividade humana. Em países de baixa renda, onde há escassez de profissionais especializados, a taxa de diagnóstico incorreto ou tardio é significativamente maior, impactando diretamente a qualidade de vida dos pacientes.
+A epilepsia afeta cerca de 50 milhões de pessoas no mundo todo, segundo a OMS, sendo uma das doenças neurológicas mais comuns. A doença se caracteriza por crises recorrentes causadas por atividade elétrica anormal no cérebro. Atualmente, o diagnóstico e monitoramento dependem muito da análise visual de registros longos de EEG feita por neurologistas. Esse processo é trabalhoso e acaba sendo subjetivo. Em países com menos recursos, onde faltam profissionais especializados, os diagnósticos errados ou tardios são mais frequentes, o que impacta diretamente a vida dos pacientes.
 
-A detecção automática de crises epilépticas em sinais EEG representa um desafio complexo devido à natureza não-estacionária e não-linear dos sinais cerebrais, além da variabilidade inter-paciente e intra-paciente. Tradicionalmente, métodos baseados em características estatísticas e espectrais foram empregados, porém com limitações em termos de generalização e robustez. Com o avanço do Deep Learning, surgiram abordagens mais sofisticadas capazes de aprender representações hierárquicas dos dados.
+Detectar crises epilépticas automaticamente em sinais EEG não é simples. Os sinais cerebrais são não-estacionários e não-lineares, além de variarem bastante entre pacientes e até mesmo para o mesmo paciente em momentos diferentes. Métodos tradicionais que usam características estatísticas e espectrais já foram testados, mas têm problemas de generalização e não são muito robustos. Com o desenvolvimento do Deep Learning, apareceram métodos mais avançados que conseguem aprender representações hierárquicas dos dados.
 
-Neste trabalho, foi desenvolvido um sistema que combina técnicas de processamento digital de sinais (DSP) com aprendizado profundo. Especificamente, utilizamos a Transformada Wavelet Discreta (DWT) para extração de características espectrais, seguida de uma arquitetura híbrida CNN-LSTM para classificação. A escolha desta abordagem híbrida se justifica pela capacidade da CNN em capturar padrões espaciais e locais nos sinais, enquanto a LSTM modela dependências temporais de longo prazo, características essenciais para identificar a evolução temporal de uma crise epiléptica.
+Neste trabalho, desenvolvemos um sistema que mistura processamento digital de sinais com deep learning. Usamos a Transformada Wavelet Discreta (DWT) para extrair características espectrais e depois aplicamos uma arquitetura híbrida CNN-LSTM para fazer a classificação. Escolhemos essa abordagem híbrida porque a CNN consegue pegar padrões espaciais e locais nos sinais, enquanto a LSTM modela dependências temporais de longo prazo. Essas duas coisas são importantes para identificar como uma crise epiléptica evolui ao longo do tempo.
 
-Foram investigadas diferentes configurações do modelo, variando hiperparâmetros como número de filtros convolucionais, unidades LSTM, taxa de aprendizado, tamanho de batch e estratégias de regularização. A comparação entre configurações foi realizada utilizando métricas padronizadas: acurácia, precisão, recall e F1-score, além de análise da matriz de confusão. A validação foi realizada através de divisão estratificada dos dados em conjuntos de treino e teste, garantindo representatividade das classes.
+Testamos várias configurações do modelo, mudando hiperparâmetros como número de filtros convolucionais, unidades LSTM, taxa de aprendizado, tamanho de batch e estratégias de regularização. Para comparar as configurações, usamos métricas padrão: acurácia, precisão, recall e F1-score, além da matriz de confusão. Fizemos a validação dividindo os dados de forma estratificada em treino e teste, o que garante que as classes fiquem bem representadas em ambos os conjuntos.
 
-Este artigo está organizado da seguinte forma: a Seção II apresenta trabalhos relacionados que investigaram problemas similares; a Seção III descreve detalhadamente o material e métodos utilizados, incluindo o dataset, pré-processamento, extração de características e arquitetura do modelo; a Seção IV apresenta os experimentos realizados e resultados obtidos; finalmente, a Seção V apresenta as conclusões e trabalhos futuros.
+O artigo está organizado assim: na Seção II mostramos trabalhos relacionados que trataram problemas parecidos; a Seção III descreve em detalhes o material e métodos que usamos, incluindo o dataset, pré-processamento, extração de características e arquitetura do modelo; a Seção IV mostra os experimentos que fizemos e os resultados; por fim, a Seção V traz as conclusões e o que pode ser feito no futuro.
 
 \section{Trabalhos Relacionados}
 
-A detecção automática de crises epilépticas em sinais EEG tem sido amplamente investigada na literatura, com diversas abordagens utilizando técnicas de Ciência de Dados e Aprendizado de Máquina. Esta seção apresenta três trabalhos recentes que abordam o mesmo problema utilizando o dataset CHB-MIT ou metodologias similares.
+A detecção automática de crises epilépticas em EEG já foi bastante estudada na literatura, com várias abordagens usando técnicas de Ciência de Dados e Aprendizado de Máquina. Nesta seção, apresentamos três trabalhos recentes que trataram do mesmo problema usando o dataset CHB-MIT ou metodologias parecidas.
 
-\textbf{Trabalho 1:} Em \cite{ahmed2020}, os autores propuseram uma arquitetura de rede neural convolucional profunda (Deep CNN) para detecção de crises epilépticas no dataset CHB-MIT. A metodologia utilizou janelamento de 2 segundos e extração de características no domínio da frequência através da Transformada de Fourier de Curto Prazo (STFT). O modelo CNN foi composto por múltiplas camadas convolucionais com diferentes números de filtros (32, 64, 128) e camadas de pooling. Os resultados reportados indicaram acurácia de 96.5\%, precisão de 0.94 e recall de 0.93. A principal limitação identificada foi a dificuldade em capturar dependências temporais de longo prazo, já que a arquitetura CNN processa janelas de forma independente.
+\textbf{Trabalho 1:} Em \cite{ahmed2020}, os autores usaram uma rede neural convolucional profunda (Deep CNN) para detectar crises epilépticas no dataset CHB-MIT. Eles fizeram janelamento de 2 segundos e extraíram características no domínio da frequência usando a Transformada de Fourier de Curto Prazo (STFT). O modelo tinha várias camadas convolucionais com diferentes números de filtros (32, 64, 128) e camadas de pooling. Os resultados mostraram acurácia de 96.5\%, precisão de 0.94 e recall de 0.93. O problema principal que eles identificaram foi que a CNN tem dificuldade para capturar dependências temporais de longo prazo, porque processa as janelas de forma independente.
 
-\textbf{Trabalho 2:} O estudo apresentado em \cite{liu2021} investigou o uso de redes LSTM bidirecionais para detecção de crises epilépticas, também utilizando o dataset CHB-MIT. A abordagem focou na modelagem de sequências temporais longas, utilizando janelas de 4 segundos com sobreposição. As características foram extraídas através de análise espectral (bandas de frequência delta, theta, alpha, beta e gamma). O modelo LSTM bidirecional com 128 unidades alcançou acurácia de 97.8\%, precisão de 0.96 e recall de 0.95. Os autores destacaram a capacidade do modelo em capturar padrões temporais, porém notaram limitações na extração de características espaciais entre múltiplos canais EEG.
+\textbf{Trabalho 2:} O estudo de \cite{liu2021} testou redes LSTM bidirecionais para detectar crises epilépticas, também usando o dataset CHB-MIT. Eles focaram em modelar sequências temporais longas, usando janelas de 4 segundos com sobreposição. As características foram extraídas por análise espectral, separando as bandas de frequência delta, theta, alpha, beta e gamma. O modelo LSTM bidirecional com 128 unidades chegou a 97.8\% de acurácia, precisão de 0.96 e recall de 0.95. Os autores destacaram que o modelo consegue capturar padrões temporais bem, mas notaram que tem limitações para extrair características espaciais entre os vários canais do EEG.
 
-\textbf{Trabalho 3:} Em \cite{sharma2022}, foi proposta uma abordagem híbrida combinando CNN e LSTM para detecção de crises epilépticas. O trabalho utilizou extração de características através de wavelets (Daubechies 4) e uma arquitetura que processa primeiro os dados com CNN 1D, seguida de camadas LSTM. O dataset utilizado foi uma combinação de CHB-MIT e outro dataset público. Os resultados reportados mostraram acurácia de 98.2\%, precisão de 0.97 e recall de 0.96. A principal contribuição foi demonstrar a sinergia entre CNN e LSTM, porém o trabalho não explorou extensivamente diferentes configurações de hiperparâmetros nem estratégias de balanceamento de classes.
+\textbf{Trabalho 3:} Em \cite{sharma2022}, foi proposta uma abordagem híbrida que combina CNN e LSTM para detectar crises epilépticas. Eles usaram wavelets (Daubechies 4) para extrair características e uma arquitetura que primeiro processa os dados com CNN 1D e depois passa por camadas LSTM. O dataset era uma combinação de CHB-MIT com outro dataset público. Os resultados mostraram acurácia de 98.2\%, precisão de 0.97 e recall de 0.96. A principal contribuição foi mostrar que CNN e LSTM funcionam bem juntas, mas o trabalho não explorou muito diferentes configurações de hiperparâmetros nem estratégias para balancear as classes.
 
-Comparando os trabalhos apresentados, observa-se que abordagens híbridas (CNN-LSTM) tendem a apresentar melhor desempenho, combinando as vantagens de ambas as arquiteturas. No entanto, a maioria dos trabalhos utiliza extração de características no domínio da frequência (STFT ou análise espectral), enquanto poucos exploram o potencial da Transformada Wavelet, que oferece melhor resolução tempo-frequência para sinais não-estacionários como EEG.
+Olhando os trabalhos, dá para ver que abordagens híbridas (CNN-LSTM) costumam ter melhor desempenho, porque combinam as vantagens das duas arquiteturas. Mas a maioria dos trabalhos usa extração de características no domínio da frequência (STFT ou análise espectral), e poucos exploram a Transformada Wavelet, que tem melhor resolução tempo-frequência para sinais não-estacionários como o EEG.
 
-A contribuição deste trabalho frente aos trabalhos relacionados reside em: (1) utilização sistemática da Transformada Wavelet Discreta para extração de características, aproveitando sua capacidade de análise multi-resolução; (2) investigação detalhada de diferentes configurações de hiperparâmetros e estratégias de pré-processamento; (3) implementação de balanceamento de classes robusto através de undersampling e class weights; (4) processamento de múltiplos pacientes do dataset CHB-MIT, aumentando a generalização do modelo; (5) utilização de normalização robusta (RobustScaler) para lidar com outliers comuns em dados de EEG.
+O que nosso trabalho traz de diferente em relação aos outros: (1) usamos a Transformada Wavelet Discreta de forma sistemática para extrair características, aproveitando que ela faz análise multi-resolução; (2) investigamos em detalhe diferentes configurações de hiperparâmetros e estratégias de pré-processamento; (3) implementamos um balanceamento de classes mais robusto usando undersampling e class weights; (4) processamos vários pacientes do dataset CHB-MIT, o que aumenta a generalização do modelo; (5) usamos normalização robusta (RobustScaler) para lidar com outliers que são comuns em dados de EEG.
 
 \section{Material e Métodos}
 
 \subsection{Apresentação do Dataset}
 
-O dataset utilizado neste trabalho é o \textbf{CHB-MIT Scalp EEG Database}, uma base de dados pública amplamente reconhecida na comunidade científica para pesquisa em detecção de epilepsia. Este dataset foi coletado no Children's Hospital Boston e contém registros de EEG de 24 pacientes pediátricos (identificados como chb01 a chb24) com epilepsia intratável.
+Usamos o \textbf{CHB-MIT Scalp EEG Database}, que é uma base de dados pública bem conhecida na área de pesquisa em detecção de epilepsia. O dataset foi coletado no Children's Hospital Boston e tem registros de EEG de 24 pacientes pediátricos (chb01 até chb24) com epilepsia intratável.
 
-O dataset está disponível através do PhysioNet \cite{goldberger2000} e contém arquivos no formato EDF (European Data Format), que é um padrão internacional para armazenamento de dados de sinais biomédicos. Cada arquivo EDF contém registros contínuos de EEG capturados em múltiplos canais (tipicamente 23 canais EEG), com frequência de amostragem de 256 Hz. Os arquivos são acompanhados de arquivos de anotação (formato .seizures) que indicam os intervalos de tempo onde ocorreram crises epilépticas, fornecendo os rótulos de ground truth necessários para treinamento supervisionado.
+O dataset está disponível no PhysioNet \cite{goldberger2000} e os arquivos estão no formato EDF (European Data Format), que é um padrão internacional para guardar dados de sinais biomédicos. Cada arquivo EDF tem registros contínuos de EEG capturados em vários canais (geralmente 23 canais EEG), com frequência de amostragem de 256 Hz. Junto com os arquivos EDF vêm arquivos de anotação (formato .seizures) que mostram os intervalos de tempo onde aconteceram crises epilépticas, o que nos dá os rótulos de ground truth que precisamos para treinar o modelo de forma supervisionada.
 
-Para este trabalho, foram processados dados de múltiplos pacientes (chb01 até chb24), com foco especial em arquivos que contêm crises epilépticas anotadas. A estratégia de seleção de dados priorizou arquivos com crises documentadas, garantindo representatividade da classe positiva, enquanto também incluiu uma amostra de arquivos sem crises para fornecer contexto de atividade cerebral normal.
+Para este trabalho, processamos dados de vários pacientes (chb01 até chb24), dando prioridade para arquivos que têm crises epilépticas anotadas. Nossa estratégia foi priorizar arquivos com crises documentadas, para garantir que a classe positiva ficasse bem representada, mas também incluímos uma amostra de arquivos sem crises para ter contexto de atividade cerebral normal.
 
-O número total de observações (janelas) processadas varia conforme os pacientes disponíveis, mas tipicamente resulta em dezenas de milhares de janelas após o processo de janelamento. Cada janela representa 2 segundos de sinal EEG, resultando em 512 amostras por canal (considerando frequência de amostragem de 256 Hz).
+O número total de observações (janelas) que processamos varia conforme os pacientes disponíveis, mas geralmente dá dezenas de milhares de janelas depois do processo de janelamento. Cada janela representa 2 segundos de sinal EEG, o que dá 512 amostras por canal (já que a frequência de amostragem é 256 Hz).
 
-Os atributos ou features do dataset são os valores de amplitude do sinal EEG em cada canal e em cada instante de tempo. Após a extração de características via Transformada Wavelet, a dimensionalidade é reduzida, como detalhado na Seção III.C.
+Os atributos ou features do dataset são os valores de amplitude do sinal EEG em cada canal e em cada instante de tempo. Depois que fazemos a extração de características usando a Transformada Wavelet, a dimensionalidade fica reduzida, como explicamos na Seção III.C.
 
 \subsection{Exploração e Pré-processamento}
 
-Antes de aplicar técnicas de aprendizado de máquina, foi realizada uma exploração inicial dos dados e aplicado um pipeline robusto de pré-processamento, essencial para garantir a qualidade e consistência dos dados de entrada.
+Antes de aplicar técnicas de aprendizado de máquina, fizemos uma exploração inicial dos dados e aplicamos um pipeline de pré-processamento robusto, que é essencial para garantir qualidade e consistência dos dados de entrada.
 
 \textbf{Hipóteses investigadas:}
 \begin{itemize}
@@ -86,9 +86,9 @@ Antes de aplicar técnicas de aprendizado de máquina, foi realizada uma explora
 
 \textbf{Tratamento de dados ausentes:} O dataset CHB-MIT é bem curado e não apresenta dados ausentes significativos. No entanto, durante o processamento, algumas janelas podem ser descartadas se não atenderem critérios de qualidade (por exemplo, se a janela for muito pequena para a decomposição wavelet no nível desejado). Este tratamento é realizado automaticamente durante a extração de características.
 
-\textbf{Normalização dos dados:} Foi aplicada normalização utilizando \texttt{RobustScaler} do scikit-learn, que utiliza a mediana e o intervalo interquartil (IQR) em vez da média e desvio padrão. Esta escolha é particularmente adequada para sinais EEG, que frequentemente contêm outliers devido a artefatos de movimento, interferência elétrica ou outros ruídos. A normalização é aplicada após a extração de características wavelet, garantindo que todas as features estejam na mesma escala, o que é essencial para a convergência adequada de redes neurais.
+\textbf{Normalização dos dados:} Aplicamos normalização usando \texttt{RobustScaler} do scikit-learn, que usa mediana e intervalo interquartil (IQR) em vez de média e desvio padrão. Essa escolha funciona bem para sinais EEG, que costumam ter outliers por causa de artefatos de movimento, interferência elétrica ou outros ruídos. A normalização é feita depois da extração de características wavelet, para garantir que todas as features fiquem na mesma escala, o que é importante para a rede neural convergir direito.
 
-A normalização é realizada da seguinte forma: os dados são primeiro "achatados" de 3D (amostras, timesteps, features) para 2D, o scaler é ajustado apenas nos dados de treino (para evitar data leakage), e então os dados são transformados e remoldados de volta para 3D.
+A normalização funciona assim: primeiro "achatamos" os dados de 3D (amostras, timesteps, features) para 2D, ajustamos o scaler só nos dados de treino (para evitar data leakage), e depois transformamos e remoldamos os dados de volta para 3D.
 
 \textbf{Transformação de dados:} Os dados categóricos não são aplicáveis neste contexto, pois trabalhamos exclusivamente com sinais contínuos. No entanto, realizamos transformações importantes:
 \begin{itemize}
@@ -99,9 +99,9 @@ A normalização é realizada da seguinte forma: os dados são primeiro "achatad
 
 \subsection{Extração de Características}
 
-A extração de características é uma etapa crucial que transforma os sinais EEG brutos em representações adequadas para alimentar o modelo de Deep Learning. Neste trabalho, foi utilizada a \textbf{Transformada Wavelet Discreta (DWT)} como técnica principal de extração de características.
+A extração de características é uma etapa importante que transforma os sinais EEG brutos em representações que funcionam bem para alimentar o modelo de Deep Learning. Neste trabalho, usamos a \textbf{Transformada Wavelet Discreta (DWT)} como técnica principal para extrair características.
 
-A escolha da DWT sobre outras técnicas (como FFT ou STFT) se justifica pela capacidade das wavelets de fornecer análise multi-resolução, capturando tanto informações de baixa frequência (padrões gerais) quanto de alta frequência (transientes e mudanças rápidas), características importantes para detectar o início súbito de uma crise epiléptica.
+Escolhemos a DWT em vez de outras técnicas (como FFT ou STFT) porque as wavelets fazem análise multi-resolução, capturando tanto informações de baixa frequência (padrões gerais) quanto de alta frequência (transientes e mudanças rápidas). Isso é importante para detectar o início súbito de uma crise epiléptica.
 
 \textbf{Parâmetros da Transformada Wavelet:}
 \begin{itemize}
@@ -110,13 +110,13 @@ A escolha da DWT sobre outras técnicas (como FFT ou STFT) se justifica pela cap
     \item \textbf{Coeficientes utilizados:} Para cada nível de decomposição, são extraídos os coeficientes de aproximação (cA) e detalhe (cD). Especificamente, utilizamos cA do nível mais profundo e cD do primeiro nível, que capturam as informações mais relevantes.
 \end{itemize}
 
-O processo de extração funciona da seguinte forma: para cada janela de 2 segundos do sinal EEG, a DWT é aplicada ao longo do eixo temporal para cada canal. Os coeficientes resultantes são concatenados, reduzindo a dimensionalidade temporal de 512 pontos para aproximadamente 76 features temporais (valor variável dependendo do nível de decomposição), mantendo a informação espectral essencial. O resultado final é um tensor 3D com shape (N\_janelas, T\_reduzido, N\_canais), onde T\_reduzido representa os timesteps após a decomposição wavelet.
+O processo de extração funciona assim: para cada janela de 2 segundos do sinal EEG, aplicamos a DWT ao longo do eixo temporal para cada canal. Os coeficientes que saem são concatenados, o que reduz a dimensionalidade temporal de 512 pontos para aproximadamente 76 features temporais (esse valor varia dependendo do nível de decomposição), mas mantém a informação espectral importante. No final, temos um tensor 3D com shape (N\_janelas, T\_reduzido, N\_canais), onde T\_reduzido são os timesteps depois da decomposição wavelet.
 
-Esta redução de dimensionalidade é benéfica pois: (1) reduz o custo computacional do treinamento; (2) remove redundâncias no sinal; (3) mantém as características mais discriminativas para detecção de crises.
+Essa redução de dimensionalidade ajuda porque: (1) reduz o custo computacional do treinamento; (2) remove redundâncias no sinal; (3) mantém as características mais discriminativas para detectar crises.
 
 \subsection{Modelos de Classificação Utilizados}
 
-Neste trabalho, foi implementado um modelo de classificação binária utilizando uma arquitetura híbrida de Deep Learning: \textbf{CNN-LSTM}. A escolha por uma única arquitetura (mas com diferentes configurações testadas) se justifica pela natureza do problema e pela necessidade de capturar tanto padrões espaciais quanto temporais.
+Neste trabalho, implementamos um modelo de classificação binária usando uma arquitetura híbrida de Deep Learning: \textbf{CNN-LSTM}. Escolhemos uma única arquitetura (mas testamos diferentes configurações) porque o problema precisa capturar tanto padrões espaciais quanto temporais.
 
 O modelo implementado é uma rede neural profunda composta por:
 \begin{enumerate}
@@ -140,7 +140,7 @@ O modelo implementado é uma rede neural profunda composta por:
     \item Número de épocas: até 50, com early stopping (paciência: 10 épocas)
 \end{itemize}
 
-\textbf{Estratégias de validação:} Foi utilizada divisão estratificada dos dados em conjunto de treino (80\%) e teste (20\%), garantindo que a proporção de classes seja mantida em ambos os conjuntos. Além disso, foi implementado \texttt{EarlyStopping} monitorando a loss de validação, restaurando os pesos da melhor época para evitar overfitting.
+\textbf{Estratégias de validação:} Usamos divisão estratificada dos dados em treino (80\%) e teste (20\%), garantindo que a proporção de classes fique igual nos dois conjuntos. Também implementamos \texttt{EarlyStopping} que monitora a loss de validação e restaura os pesos da melhor época para evitar overfitting.
 
 \textbf{Métricas de avaliação:} As métricas utilizadas para avaliar o desempenho dos modelos foram:
 \begin{itemize}
@@ -151,15 +151,15 @@ O modelo implementado é uma rede neural profunda composta por:
     \item \textbf{Matriz de Confusão:} Para análise detalhada dos erros de classificação.
 \end{itemize}
 
-\textbf{Balanceamento de classes:} Devido ao desequilíbrio natural entre períodos normais e períodos de crise, foi implementada uma estratégia combinada:
+\textbf{Balanceamento de classes:} Como há um desequilíbrio natural entre períodos normais e períodos de crise, implementamos uma estratégia combinada:
 \begin{itemize}
-    \item \textbf{Undersampling:} Redução da classe majoritária (normal) mantendo uma proporção de 3:1 (normal:crise).
-    \item \textbf{Class weights:} Utilização de pesos de classe balanceados durante o treinamento, calculados automaticamente pelo scikit-learn.
+    \item \textbf{Undersampling:} Reduzimos a classe majoritária (normal) mantendo uma proporção de 3:1 (normal:crise).
+    \item \textbf{Class weights:} Usamos pesos de classe balanceados durante o treinamento, calculados automaticamente pelo scikit-learn.
 \end{itemize}
 
 \subsection{Implementação}
 
-A implementação foi realizada utilizando as seguintes bibliotecas e ferramentas:
+A implementação foi feita usando as seguintes bibliotecas e ferramentas:
 
 \begin{itemize}
     \item \textbf{Python 3.9+} como linguagem de programação.
@@ -172,13 +172,13 @@ A implementação foi realizada utilizando as seguintes bibliotecas e ferramenta
     \item \textbf{joblib} para serialização do scaler treinado.
 \end{itemize}
 
-O código foi estruturado de forma modular, com separação clara entre leitura de dados, pré-processamento, extração de características, construção do modelo e avaliação. A conexão com o Google Drive (onde o dataset está armazenado) é realizada através da API do Google Drive utilizando autenticação OAuth 2.0.
+O código foi estruturado de forma modular, separando bem a leitura de dados, pré-processamento, extração de características, construção do modelo e avaliação. A conexão com o Google Drive (onde o dataset está armazenado) é feita através da API do Google Drive usando autenticação OAuth 2.0.
 
 \section{Experimentos}
 
 \subsection{Experimentos Realizados}
 
-Foram realizados múltiplos experimentos para investigar o impacto de diferentes configurações de hiperparâmetros e estratégias de pré-processamento. A Tabela \ref{tab:hiperparametros} apresenta os melhores hiperparâmetros encontrados após experimentação, bem como as features selecionadas através da extração wavelet.
+Fizemos vários experimentos para ver o impacto de diferentes configurações de hiperparâmetros e estratégias de pré-processamento. A Tabela \ref{tab:hiperparametros} mostra os melhores hiperparâmetros que encontramos depois dos testes, além das features selecionadas através da extração wavelet.
 
 \begin{table}[H]
 \centering
@@ -217,7 +217,7 @@ Proporção Treino/Teste & 80\% / 20\% \\
 \end{tabular}
 \end{table}
 
-A Tabela \ref{tab:desempenho} apresenta o desempenho do modelo final no conjunto de teste, utilizando as métricas de avaliação definidas.
+A Tabela \ref{tab:desempenho} mostra o desempenho do modelo final no conjunto de teste, usando as métricas de avaliação que definimos.
 
 \begin{table}[H]
 \centering
@@ -232,7 +232,7 @@ CNN-LSTM Híbrida & 0.99 & 0.98 & 0.97 & 0.97 \\
 \end{tabular}
 \end{table}
 
-A Tabela \ref{tab:confusao} apresenta a matriz de confusão do modelo no conjunto de teste, fornecendo uma visão detalhada dos acertos e erros de classificação.
+A Tabela \ref{tab:confusao} mostra a matriz de confusão do modelo no conjunto de teste, dando uma visão detalhada dos acertos e erros de classificação.
 
 \begin{table}[H]
 \centering
@@ -263,7 +263,7 @@ A Tabela \ref{tab:confusao} apresenta a matriz de confusão do modelo no conjunt
 
 \textit{Nota: Os valores percentuais são aproximados e representam a distribuição típica observada nos resultados do modelo, sendo consistentes com as métricas reportadas (Precisão: 0.98, Recall: 0.97).}
 
-A Figura \ref{fig:treinamento} ilustra a evolução da acurácia e da função de perda durante o treinamento, tanto para o conjunto de treino quanto para o conjunto de validação. Observa-se convergência estável sem sinais evidentes de overfitting, graças às estratégias de regularização implementadas (dropout, early stopping, class weights).
+A Figura \ref{fig:treinamento} mostra como a acurácia e a função de perda evoluíram durante o treinamento, tanto para o conjunto de treino quanto para o de validação. Dá para ver que a convergência foi estável, sem sinais claros de overfitting, graças às estratégias de regularização que implementamos (dropout, early stopping, class weights).
 
 \begin{figure}[H]
 \centering
@@ -274,29 +274,29 @@ A Figura \ref{fig:treinamento} ilustra a evolução da acurácia e da função d
 
 \subsection{Resultados}
 
-Os resultados apresentados na Tabela \ref{tab:desempenho} demonstram que o modelo CNN-LSTM híbrido alcançou excelente desempenho na tarefa de detecção de crises epilépticas. A acurácia de 99\% indica que o modelo é capaz de classificar corretamente a grande maioria das janelas de EEG. A precisão de 0.98 significa que, quando o modelo prediz uma crise, há 98\% de chance de ser realmente uma crise, minimizando falsos alarmes. O recall de 0.97 é particularmente importante em aplicações médicas, pois indica que o modelo detecta 97\% de todas as crises presentes, minimizando falsos negativos, que são críticos neste contexto.
+Os resultados na Tabela \ref{tab:desempenho} mostram que o modelo CNN-LSTM híbrido teve um desempenho muito bom na tarefa de detectar crises epilépticas. A acurácia de 99\% mostra que o modelo consegue classificar corretamente a grande maioria das janelas de EEG. A precisão de 0.98 significa que, quando o modelo prediz uma crise, há 98\% de chance de ser realmente uma crise, o que minimiza falsos alarmes. O recall de 0.97 é especialmente importante em aplicações médicas, porque mostra que o modelo detecta 97\% de todas as crises presentes, minimizando falsos negativos, que são críticos nesse contexto.
 
-O F1-score de 0.97 representa um bom equilíbrio entre precisão e recall, demonstrando que o modelo não apresenta viés significativo para nenhuma das métricas.
+O F1-score de 0.97 mostra um bom equilíbrio entre precisão e recall, indicando que o modelo não tem viés significativo para nenhuma das métricas.
 
-A análise da matriz de confusão apresentada na Tabela \ref{tab:confusao} revela que os erros de classificação são minimizados tanto para a classe "Normal" quanto para a classe "Crise". A baixa taxa de falsos positivos ($\sim$2\%) é crucial para evitar alarmes desnecessários em ambientes clínicos, enquanto a baixa taxa de falsos negativos ($\sim$3\%) garante que a grande maioria das crises seja detectada, minimizando riscos para os pacientes. Esta distribuição equilibrada indica que o modelo generaliza bem e não apresenta viés de classe após o balanceamento implementado.
+Olhando a matriz de confusão na Tabela \ref{tab:confusao}, dá para ver que os erros de classificação são pequenos tanto para a classe "Normal" quanto para "Crise". A baixa taxa de falsos positivos ($\sim$2\%) é importante para evitar alarmes desnecessários em ambientes clínicos, enquanto a baixa taxa de falsos negativos ($\sim$3\%) garante que a grande maioria das crises seja detectada, o que minimiza riscos para os pacientes. Essa distribuição equilibrada mostra que o modelo generaliza bem e não tem viés de classe depois do balanceamento que fizemos.
 
-A convergência estável observada na Figura \ref{fig:treinamento}, com curvas de treino e validação acompanhando-se de perto, confirma que as estratégias de regularização foram eficazes em prevenir overfitting. O early stopping garantiu que o modelo parou no ponto ótimo, evitando treinamento excessivo.
+A convergência estável que aparece na Figura \ref{fig:treinamento}, com as curvas de treino e validação acompanhando-se de perto, confirma que as estratégias de regularização funcionaram bem para prevenir overfitting. O early stopping garantiu que o modelo parou no ponto certo, evitando treinar demais.
 
-Comparando com os trabalhos relacionados apresentados na Seção II, nosso modelo alcançou desempenho superior ou comparável, destacando-se pela combinação eficaz de Transformada Wavelet com arquitetura híbrida CNN-LSTM, além das estratégias robustas de pré-processamento e balanceamento de classes.
+Comparando com os trabalhos relacionados que mostramos na Seção II, nosso modelo teve desempenho melhor ou parecido, se destacando pela combinação eficaz de Transformada Wavelet com arquitetura híbrida CNN-LSTM, além das estratégias robustas de pré-processamento e balanceamento de classes.
 
 \section{Conclusão}
 
-Este trabalho apresentou um sistema completo de detecção automática de crises epilépticas em sinais EEG utilizando uma abordagem híbrida de Deep Learning combinando redes neurais convolucionais e memórias de longo prazo, aliada à extração de características através da Transformada Wavelet Discreta.
+Neste trabalho, apresentamos um sistema completo para detecção automática de crises epilépticas em sinais EEG usando uma abordagem híbrida de Deep Learning que combina redes neurais convolucionais e memórias de longo prazo, junto com extração de características através da Transformada Wavelet Discreta.
 
-A metodologia desenvolvida demonstrou eficácia significativa, alcançando acurácia de 99\%, precisão de 0.98, recall de 0.97 e F1-score de 0.97 no conjunto de teste. Estes resultados superam ou são comparáveis aos reportados em trabalhos relacionados, validando a escolha da combinação de técnicas implementadas.
+A metodologia que desenvolvemos mostrou ser bastante eficaz, chegando a 99\% de acurácia, precisão de 0.98, recall de 0.97 e F1-score de 0.97 no conjunto de teste. Esses resultados são melhores ou comparáveis aos que aparecem em trabalhos relacionados, o que valida a escolha da combinação de técnicas que implementamos.
 
-As principais contribuições técnicas deste trabalho incluem: (1) a utilização sistemática da Transformada Wavelet Discreta (Daubechies 4, nível 4) para extração de características, aproveitando sua capacidade de análise multi-resolução adequada para sinais não-estacionários como EEG; (2) a implementação de uma arquitetura híbrida CNN-LSTM que combina eficazmente a capacidade de extração de padrões espaciais da CNN com a modelagem de dependências temporais da LSTM; (3) a aplicação de estratégias robustas de pré-processamento, incluindo filtragem de banda, normalização robusta (RobustScaler) e balanceamento de classes através de undersampling e class weights; (4) a investigação sistemática de diferentes configurações de hiperparâmetros, resultando em um modelo otimizado.
+As principais contribuições técnicas deste trabalho são: (1) usar a Transformada Wavelet Discreta (Daubechies 4, nível 4) de forma sistemática para extrair características, aproveitando que ela faz análise multi-resolução, o que é adequado para sinais não-estacionários como EEG; (2) implementar uma arquitetura híbrida CNN-LSTM que combina bem a capacidade da CNN de extrair padrões espaciais com a modelagem de dependências temporais da LSTM; (3) aplicar estratégias robustas de pré-processamento, incluindo filtragem de banda, normalização robusta (RobustScaler) e balanceamento de classes usando undersampling e class weights; (4) investigar sistematicamente diferentes configurações de hiperparâmetros, o que resultou em um modelo otimizado.
 
-Os atributos selecionados através da decomposição wavelet (coeficientes de aproximação e detalhe) demonstraram ser altamente discriminativos para a tarefa de detecção de crises, reduzindo significativamente a dimensionalidade dos dados (de 512 pontos para aproximadamente 76 timesteps) enquanto preserva a informação espectral essencial.
+Os atributos que selecionamos através da decomposição wavelet (coeficientes de aproximação e detalhe) se mostraram muito discriminativos para detectar crises, reduzindo bastante a dimensionalidade dos dados (de 512 pontos para aproximadamente 76 timesteps) mas mantendo a informação espectral importante.
 
-O modelo CNN-LSTM se sobressaiu segundo as diferentes métricas utilizadas, demonstrando capacidade de generalização e robustez. A alta precisão (0.98) é crucial para evitar falsos alarmes em ambientes clínicos, enquanto o alto recall (0.97) garante que a grande maioria das crises seja detectada, minimizando riscos para os pacientes.
+O modelo CNN-LSTM se destacou nas diferentes métricas que usamos, mostrando capacidade de generalização e robustez. A alta precisão (0.98) é importante para evitar falsos alarmes em ambientes clínicos, enquanto o alto recall (0.97) garante que a grande maioria das crises seja detectada, o que minimiza riscos para os pacientes.
 
-Como trabalhos futuros, propõe-se: (1) investigação de arquiteturas mais profundas ou variantes como GRU (Gated Recurrent Unit) e Transformers; (2) exploração de técnicas de aprendizado por transferência entre diferentes pacientes; (3) implementação de detecção em tempo real com otimizações para dispositivos embarcados; (4) investigação de técnicas de explicação do modelo (XAI) para aumentar a confiança clínica; (5) validação em datasets adicionais e diferentes populações de pacientes; (6) exploração de técnicas de data augmentation específicas para sinais EEG; (7) desenvolvimento de um sistema de alerta em tempo real integrado a dispositivos de monitoramento contínuo.
+Para trabalhos futuros, sugerimos: (1) investigar arquiteturas mais profundas ou variantes como GRU (Gated Recurrent Unit) e Transformers; (2) explorar técnicas de aprendizado por transferência entre diferentes pacientes; (3) implementar detecção em tempo real com otimizações para dispositivos embarcados; (4) investigar técnicas de explicação do modelo (XAI) para aumentar a confiança clínica; (5) validar em datasets adicionais e diferentes populações de pacientes; (6) explorar técnicas de data augmentation específicas para sinais EEG; (7) desenvolver um sistema de alerta em tempo real integrado a dispositivos de monitoramento contínuo.
 
 \section*{Referências}
 
