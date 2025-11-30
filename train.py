@@ -3,13 +3,16 @@ import tensorflow as tf
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report, confusion_matrix
 from sklearn.utils.class_weight import compute_class_weight
-from sklearn.preprocessing import StandardScaler  # <--- IMPORTANTE
+from sklearn.preprocessing import StandardScaler 
+from sklearn.preprocessing import RobustScaler # Em vez de StandardScaler
 
 from drive_connection import auth_drive
 from helpers.chbmit_helpers import get_patient_folder_id, list_patient_edfs
 from readers.chbmit_reader import build_windows_and_labels
 from processors.wavelet import extract_features_wavelet
 from models.hybrid_model import build_cnn_lstm_model
+
+import joblib
 
 import matplotlib.pyplot as plt
 
@@ -51,15 +54,26 @@ def main():
     patient_id = get_patient_folder_id(service, FOLDER_ID, PATIENT)
     
     edfs = list_patient_edfs(service, patient_id)
-    seizure_files = [f for f in edfs if f['has_seizures_file']]
     
-    if not seizure_files: return
+    # Pegamos todos que têm crise
+    files_with_seizure = [f for f in edfs if f['has_seizures_file']]
+    # Pegamos todos que NÃO têm crise
+    files_normal = [f for f in edfs if not f['has_seizures_file']]
+    
+    # ESTRATÉGIA: Usar todos com crise + uma quantidade igual ou maior de arquivos normais
+    # Isso garante que a rede veja "dias normais"
+    import random
+    # Exemplo: pega 5 arquivos puramente normais aleatórios para dar contexto
+    files_normal_sample = files_normal[:5] if len(files_normal) > 5 else files_normal
+    
+    training_files = files_with_seizure + files_normal_sample
+    print(f">> Selecionados {len(training_files)} arquivos ({len(files_with_seizure)} com crise, {len(files_normal_sample)} normais puros)")
 
     all_X = []
     all_y = []
 
-    print(f">> Processando {len(seizure_files)} arquivos...")
-    for edf_row in seizure_files:
+    print(f">> Processando {len(training_files)} arquivos...")
+    for edf_row in training_files:
         try:
             raw, windows, y = build_windows_and_labels(
                 service, FOLDER_ID, PATIENT, edf_row["name"],
@@ -81,10 +95,15 @@ def main():
     idx_normal = np.where(y_raw == 0)[0]
     
     n_samples = len(idx_seizure)
+    n_seizure = len(idx_seizure)
+
+    RATIO = 3 
+    n_normal_keep = int(n_seizure * RATIO)
+    
     # Undersampling dos normais
     if len(idx_normal) > n_samples:
         np.random.shuffle(idx_normal)
-        selected_normals = idx_normal[:n_samples] 
+        selected_normals = idx_normal[:n_normal_keep] 
     else:
         selected_normals = idx_normal
 
@@ -104,7 +123,8 @@ def main():
 
     # --- NORMALIZAÇÃO (CRÍTICO) ---
     # StandardScaler funciona em 2D, precisamos achatar, escalar e voltar pra 3D
-    scaler = StandardScaler()
+    #scaler = StandardScaler()
+    scaler = RobustScaler()
     
     N, T, F = X_train.shape
     X_train_reshaped = X_train.reshape(-1, F)
@@ -114,6 +134,9 @@ def main():
     X_train_scaled = scaler.fit_transform(X_train_reshaped).reshape(N, T, F)
     X_test_scaled = scaler.transform(X_test_reshaped).reshape(X_test.shape[0], T, F)
     
+    print("[SISTEMA] Salvando o Scaler para uso futuro...")
+    joblib.dump(scaler, 'scaler_treinado.pkl')
+
     print(">> Dados Normalizados.")
 
     # --- MODELO ---
