@@ -4,6 +4,9 @@ import tensorflow as tf
 import joblib
 import argparse
 import os
+import matplotlib.pyplot as plt
+import matplotlib
+matplotlib.use('Agg')
 
 # Importa as mesmas funções usadas no treino para garantir consistência
 from processors.wavelet import extract_features_wavelet
@@ -106,6 +109,22 @@ def predict_pipeline(edf_path, model_path='modelo_final_epilepsia.keras', scaler
             duration = t_end - t_start
             
             print(f"  [EVENTO] {t_start:.2f}s até {t_end:.2f}s (Duração: {duration:.2f}s)")
+
+    plt.figure(figsize=(18, 5))
+    plt.plot(probs.flatten(), label="Probabilidade de Crise", color='blue')
+    plt.plot(raw_predictions * 1.05, label="Predição Binária (> limiar)", color='red', alpha=0.5)
+    
+    for (start_win, end_win) in final_detections:
+        plt.axvspan(start_win, end_win, color='orange', alpha=0.3, label='Crise Detectada' if start_win == final_detections[0][0] else None)
+
+    plt.axhline(THRESHOLD_CONFIDENCE, color='green', linestyle='--', label=f"Limiar = {THRESHOLD_CONFIDENCE}")
+    plt.title("Probabilidade de Crise por Janela")
+    plt.xlabel("Janela (cada passo = 0.5s)")
+    plt.ylabel("Probabilidade")
+    plt.legend(loc='upper right')
+    plt.grid(alpha=0.3)
+
+    plt.savefig("predicao_epilepsia.png")
 
 if __name__ == "__main__":
     # Uso via linha de comando
